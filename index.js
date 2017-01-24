@@ -88,15 +88,15 @@ CmdAccessory.prototype = {
 					  updateValue(parseInt(chunk)===1);
 				});
 			});
-			myServer.on('listening', () => {
+			this.myServer.on('listening', () => {
 				that.log('UNIX socket: listening: ' + '/tmp/' + that.socket);
 			});
-			myServer.on('error', (e) => {
-				that.globs.info('UNIX socket: error');
+			this.myServer.on('error', (e) => {
+				that.log('UNIX socket: error');
 				if (e.code == 'EADDRINUSE') {
-					that.globs.info('UNIX socket: was in use, freeing');
+					that.log('UNIX socket: was in use, freeing');
 					fs.unlinkSync('/tmp/' + that.socket);
-					myServer.listen('/tmp/' + that.socket);
+					that.myServer.listen('/tmp/' + that.socket);
 				} else {
 					throw(e); // re-raise
 				}
