@@ -101,7 +101,7 @@ CmdAccessory.prototype = {
 					throw(e); // re-raise
 				}
 			})
-			myServer.listen('/tmp/'+this.socket);
+			this.myServer.listen('/tmp/'+this.socket);
 		}
 
 		return [switchService];
