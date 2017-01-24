@@ -18,8 +18,13 @@ Configuration sample:
             "accessory": "CMD",
             "name": "PlayStation",
             "on_cmd": "ps4-waker",
-            "off_cmd": "ps4-waker standby"
+            "off_cmd": "ps4-waker standby",
+            "UNIXSocket": "ps4alive"
         }
     ]
 
 ```
+`UNIXSocket` is optional, it allows you to simply change the state of the switch in homebridge/HomeKit by sending 0 or 1 to the local socket with the given name in /tmp/.  
+You might want to use `socat` to do so in your script, like in  
+`echo 1 | socat STDIN UNIX-CONNECT:/tmp/ps4alive`
+ 

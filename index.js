@@ -1,5 +1,7 @@
 var Service, Characteristic;
 var exec = require("child_process").exec;
+var net = require('net');
+var fs = require('fs');
 
 module.exports = function(homebridge){
   Service = homebridge.hap.Service;
@@ -14,6 +16,7 @@ function CmdAccessory(log, config) {
 	// url info
 	this.on_cmd   = config["on_cmd"];
 	this.off_cmd  = config["off_cmd"];
+	this.socket	  = config["UNIXSocket"];
 	this.name = config["name"];
 }
 
@@ -69,6 +72,37 @@ CmdAccessory.prototype = {
 		switchService
 			.getCharacteristic(Characteristic.On)
 			.on('set', this.setPowerState.bind(this));
+
+		if (this.socket) {
+			// open a unix socket at the given path
+			var that = this;
+			this.myServer = net.createServer(function(socket) {
+				that.log('UNIX socket: connection to socket: ' + that.socket);
+				socket.on('end', () => {
+					that.log('UNIX socket: connection to socket closed: ' + that.socket);
+				});
+				socket.on('data', (chunk) => {
+					//that.log('UNIX socket: data chunk "' + chunk + '"');
+					that.log('UNIX socket: ' + that.socket + ', data: "' + parseInt(chunk)===1 + '"');
+					switchService.getCharacteristic(Characteristic.On).
+					  updateValue(parseInt(chunk)===1);
+				});
+			});
+			myServer.on('listening', () => {
+				that.log('UNIX socket: listening: ' + '/tmp/' + that.socket);
+			});
+			myServer.on('error', (e) => {
+				that.globs.info('UNIX socket: error');
+				if (e.code == 'EADDRINUSE') {
+					that.globs.info('UNIX socket: was in use, freeing');
+					fs.unlinkSync('/tmp/' + that.socket);
+					myServer.listen('/tmp/' + that.socket);
+				} else {
+					throw(e); // re-raise
+				}
+			})
+			myServer.listen('/tmp/'+this.socket);
+		}
 
 		return [switchService];
 	}
